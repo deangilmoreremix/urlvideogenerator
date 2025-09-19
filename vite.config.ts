@@ -2,16 +2,23 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+const isTest = process.env.VITEST === 'true';
+
 export default defineConfig({
-  plugins: [
-    react(),
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@ffmpeg/ffmpeg': '@ffmpeg/ffmpeg/dist/ffmpeg.mjs',
-      '@ffmpeg/util': '@ffmpeg/util/dist/util.mjs'
-    },
+      '@ffmpeg/ffmpeg': isTest
+        ? path.resolve(__dirname, './tests/stubs/ffmpeg.ts')
+        : '@ffmpeg/ffmpeg/dist/ffmpeg.mjs',
+      '@ffmpeg/ffmpeg/dist/ffmpeg.mjs': isTest
+        ? path.resolve(__dirname, './tests/stubs/ffmpeg.ts')
+        : '@ffmpeg/ffmpeg/dist/ffmpeg.mjs',
+      '@ffmpeg/util': isTest
+        ? path.resolve(__dirname, './tests/stubs/ffmpeg-util.ts')
+        : '@ffmpeg/util/dist/util.mjs'
+    }
   },
   optimizeDeps: {
     include: [
@@ -43,5 +50,8 @@ export default defineConfig({
       ]
     }
   },
-  envPrefix: 'VITE_'
+  envPrefix: 'VITE_',
+  test: {
+    environment: 'node'
+  }
 });
