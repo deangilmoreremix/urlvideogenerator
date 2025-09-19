@@ -1,17 +1,23 @@
-import { createFFmpeg } from '@ffmpeg/ffmpeg/dist/ffmpeg.mjs';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import { validateUrl } from '../utils';
 import type { TranscodeOptions } from './types';
 
 export class FFmpegService {
   private static instance: FFmpegService;
-  private ffmpeg = createFFmpeg({
-    log: true,
-    corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js'
-  });
+  private ffmpeg: FFmpeg;
   private isInitialized = false;
 
-  private constructor() {}
+  private constructor() {
+    this.ffmpeg = new FFmpeg();
+    this.ffmpeg.on('log', (event) => {
+      if (typeof event === 'string') {
+        console.log(event);
+      } else if (event && typeof event === 'object' && 'message' in event) {
+        console.log((event as { message: string }).message);
+      }
+    });
+  }
 
   static getInstance(): FFmpegService {
     if (!this.instance) {
@@ -23,7 +29,9 @@ export class FFmpegService {
   async init() {
     if (!this.isInitialized) {
       console.log('Loading FFmpeg...');
-      await this.ffmpeg.load();
+      await this.ffmpeg.load({
+        corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js'
+      });
       console.log('FFmpeg loaded successfully');
       this.isInitialized = true;
     }
