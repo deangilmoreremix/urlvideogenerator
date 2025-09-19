@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { VideoService } from '../lib/video/video-service';
+import { FFmpegService } from '../lib/video/ffmpeg-service';
 import type { ProcessingOptions } from '../lib/video/types';
 
 interface UseVideoProcessorOptions {

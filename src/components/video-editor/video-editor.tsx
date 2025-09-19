@@ -8,10 +8,12 @@ import { SequenceTimeline } from './sequence-timeline';
 import { PropertiesPanel } from './properties-panel';
 import { HeaderControls } from './header-controls';
 import { AIAssistant } from '../ai-assistant/ai-assistant';
-import { Brain, Maximize2, Minimize2, Layout, PanelLeft, PanelRight } from 'lucide-react';
+import { Brain, Maximize2, Minimize2, PanelLeft, PanelRight, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVideoProcessor } from '../../hooks/use-video-processor';
+import { VideoInput } from '../video/video-input';
+import { ProcessButton } from '../video/process-button';
 
 export const VideoEditor = () => {
   const [showAIAssistant, setShowAIAssistant] = useState(false);
@@ -41,6 +43,21 @@ export const VideoEditor = () => {
       console.log(`Processing progress: ${p}%`);
     }
   });
+
+  const processingOptions = { quality: 1080 };
+
+  const handleProcess = () => {
+    if (!inputUrl) {
+      return;
+    }
+
+    void processVideo(inputUrl, processingOptions);
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    handleProcess();
+  };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -113,6 +130,41 @@ export const VideoEditor = () => {
 
           <Toolbar />
 
+          <div className="border-b border-gray-800 bg-gray-900/60 px-6 py-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 md:flex-row md:items-center">
+              <div className="flex flex-1 flex-col gap-2">
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <VideoInput
+                    value={inputUrl}
+                    onChange={setInputUrl}
+                    placeholder="Enter source video URL..."
+                    className="bg-gray-900"
+                  />
+                  <ProcessButton
+                    onClick={handleProcess}
+                    loading={loading}
+                    progress={progress}
+                    disabled={!inputUrl}
+                    className="min-w-[180px]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 text-sm">
+                  {loading && (
+                    <span className="text-gray-400">
+                      Processing video... {progress ? `${Math.round(progress)}%` : ''}
+                    </span>
+                  )}
+                  {error && (
+                    <span className="flex items-center gap-2 text-red-400">
+                      <AlertCircle className="h-4 w-4" />
+                      {error}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </form>
+          </div>
+
           <div className="relative flex-1 overflow-hidden bg-gray-950 p-6 space-y-6">
             <motion.div
               layout
@@ -120,23 +172,46 @@ export const VideoEditor = () => {
                 isFullscreen ? 'h-full' : 'h-[80vh]'
               }`}
             >
-              <div className="h-full overflow-hidden rounded-lg border border-gray-800 bg-gray-900 shadow-2xl">
-                <Player
-                  component={MyComposition}
-                  durationInFrames={300}
-                  fps={30}
-                  compositionWidth={1080}
-                  compositionHeight={1920}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                  }}
-                  controls
-                  inputProps={{
-                    videoUrl: url,
-                    content
-                  }}
-                />
+              <div className="flex h-full items-center justify-center overflow-hidden rounded-lg border border-gray-800 bg-gray-900 shadow-2xl">
+                {url ? (
+                  <Player
+                    component={MyComposition}
+                    durationInFrames={300}
+                    fps={30}
+                    compositionWidth={1080}
+                    compositionHeight={1920}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    controls
+                    inputProps={{
+                      videoUrl: url,
+                      content
+                    }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 p-6 text-center text-gray-400">
+                    {loading ? (
+                      <>
+                        <p className="text-base font-medium text-white">Processing video</p>
+                        <p className="text-sm text-gray-400">
+                          {progress ? `Please wait... ${Math.round(progress)}%` : 'Please wait while we process your video.'}
+                        </p>
+                      </>
+                    ) : error ? (
+                      <>
+                        <p className="text-base font-medium text-red-400">Unable to load video</p>
+                        <p className="text-sm text-gray-400">{error}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-base font-medium text-white">No video loaded</p>
+                        <p className="text-sm text-gray-400">Enter a video URL above to start processing.</p>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
             
