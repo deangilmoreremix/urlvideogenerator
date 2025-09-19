@@ -9,8 +9,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@ffmpeg/ffmpeg': '@ffmpeg/ffmpeg/dist/ffmpeg.mjs',
-      '@ffmpeg/util': '@ffmpeg/util/dist/util.mjs'
     },
   },
   optimizeDeps: {
